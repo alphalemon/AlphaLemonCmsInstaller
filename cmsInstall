@@ -71,7 +71,7 @@ class Installer {
         $this->checkFolder($dir . '/vendor/propel');
         $this->checkFolder($dir . '/vendor/phing');
         $this->checkFolder($dir . '/vendor/bundles/Propel/PropelBundle');
-        $this->checkFolder($dir . '/vendor/bundles/AlphaLemon/CmsBundle');
+        $this->checkFolder($dir . '/vendor/bundles/AlphaLemon/AlphaLemonCmsBundle');
         $this->checkFolder($dir . '/vendor/bundles/AlphaLemon/PageTreeBundle');
         $this->checkFolder($dir . '/vendor/bundles/AlphaLemon/AlValumUploaderBundle');
         $this->checkFolder($dir . '/vendor/bundles/AlphaLemon/ElFinderBundle');
@@ -101,15 +101,15 @@ class Installer {
         $kernelFile = $this->rootDir . '/app/AppKernel.php';
         $contents = file_get_contents($kernelFile);
        
-        if(strpos($contents, '$themes = new \ThemeEngineCore\Autoloader\ThemesAutoloader()') === false)
+        if(strpos($contents, '$themes = new \AlphaLemon\ThemeEngineBundle\Core\Autoloader\ThemesAutoloader()') === false)
         {
             $cmsBundles = "\$themes = new \ThemeEngineCore\Autoloader\ThemesAutoloader();\n";
             $cmsBundles .= "        \$bundles = array_merge(\$bundles, \$themes->getBundles());\n";            
             $cmsBundles .= "        if (in_array(\$this->getEnvironment(), array('alcms', 'alcms_dev', 'test'))) {\n";
             $cmsBundles .= "            \$bundles[] = new AlphaLemon\AlValumUploaderBundle\AlValumUploaderBundle();\n";
             $cmsBundles .= "            \$bundles[] = new AlphaLemon\ElFinderBundle\AlphaLemonElFinderBundle();\n"; 
-            $cmsBundles .= "            \$bundles[] = new AlphaLemon\CmsBundle\AlphaLemonCmsBundle();\n";  
-            $cmsBundles .= "            \$internalBundles = new \AlphaLemonCmsCore\Autoloader\InternalBundlesAutoloader();\n";;
+            $cmsBundles .= "            \$bundles[] = new AlphaLemon\AlphaLemonCmsBundle\AlphaLemonCmsBundle();\n";  
+            $cmsBundles .= "            \$internalBundles = new \AlphaLemon\AlphaLemonCmsBundle\Core\Autoloader\InternalBundlesAutoloader();\n";;
             $cmsBundles .= "            \$bundles = array_merge(\$bundles, \$internalBundles->getBundles());\n";
             $cmsBundles .= "        }\n\n";
             $cmsBundles .= "        if (in_array(\$this->getEnvironment(), array('dev', 'test', 'alcms_dev'";
@@ -153,12 +153,12 @@ class Installer {
     private function setUpEnvironments()
     {
         $fs = new Filesystem();
-        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/CmsBundle/Resources/environments/frontcontrollers/alcms.php', $this->rootDir . '/web/alcms.php', true);
-        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/CmsBundle/Resources/environments/frontcontrollers/alcms_dev.php', $this->rootDir . '/web/alcms_dev.php', true);
-        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/CmsBundle/Resources/environments/config/config_alcms.yml', $this->rootDir . '/app/config/config_alcms.yml', true);
-        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/CmsBundle/Resources/environments/config/config_alcms_dev.yml', $this->rootDir . '/app/config/config_alcms_dev.yml', true);
-        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/CmsBundle/Resources/environments/config/routing_alcms.yml', $this->rootDir . '/app/config/routing_alcms.yml', true);
-        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/CmsBundle/Resources/environments/config/routing_alcms_dev.yml', $this->rootDir . '/app/config/routing_alcms_dev.yml', true);
+        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/AlphaLemonCmsBundle/Resources/environments/frontcontrollers/alcms.php', $this->rootDir . '/web/alcms.php', true);
+        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/AlphaLemonCmsBundle/Resources/environments/frontcontrollers/alcms_dev.php', $this->rootDir . '/web/alcms_dev.php', true);
+        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/AlphaLemonCmsBundle/Resources/environments/config/config_alcms.yml', $this->rootDir . '/app/config/config_alcms.yml', true);
+        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/AlphaLemonCmsBundle/Resources/environments/config/config_alcms_dev.yml', $this->rootDir . '/app/config/config_alcms_dev.yml', true);
+        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/AlphaLemonCmsBundle/Resources/environments/config/routing_alcms.yml', $this->rootDir . '/app/config/routing_alcms.yml', true);
+        $fs->copy($this->rootDir . '/vendor/bundles/AlphaLemon/AlphaLemonCmsBundle/Resources/environments/config/routing_alcms_dev.yml', $this->rootDir . '/app/config/routing_alcms_dev.yml', true);
     }
     
     private function writeConfigurations()
@@ -232,8 +232,8 @@ class Installer {
         $kernel = new \AppKernel('alcms_dev', true);
         $kernel->boot();
         $cmd = sprintf('alphalemon:populate %s %s %s %s --driver=%s', $this->host, $this->database, $this->user, $this->password, $this->driver);
-       
-        \PageTreeCore\Tools\AlToolkit::executeCommand($kernel, array('propel:build',
+    echo $cmd;exit;
+        \AlphaLemon\PageTreeBundle\Core\Tools\AlToolkit::executeCommand($kernel, array('propel:build',
                                                                      'propel:insert-sql --force',
                                                                      $cmd,
                                                                      'assets:install ' . $this->rootDir . '/web --symlink',
