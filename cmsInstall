@@ -8,13 +8,12 @@
 
 set_time_limit(0);
 
-require_once __DIR__ . 'config.php';
+require_once __DIR__ . '/config.php';
 
 require_once __DIR__ . '/../vendor/symfony/src/Symfony/Component/ClassLoader/UniversalClassLoader.php';
 require_once __DIR__ . '/../vendor/propel/runtime/lib/Propel.php';
 require_once __DIR__ . '/../vendor/propel/runtime/lib/connection/PropelPDO.php';
 require_once __DIR__ . '/../app/autoload.php';
-require_once __DIR__ . '/../app/AppKernel.php';
 
 
 use Symfony\Component\Filesystem\Filesystem;
@@ -40,7 +39,7 @@ class Installer {
     private $driver;
     
     public function __construct() {
-        $this->rootDir = __DIR__ . '/..';
+        $this->rootDir = \AlphaLemon\PageTreeBundle\Core\Tools\AlToolkit::normalizePath(__DIR__ . '/..');
     }
 
 
@@ -91,16 +90,21 @@ class Installer {
     
     private function manipulateAppKernel()
     {
-        $kernel = new \AppKernel('dev', true);
-        $km = new KernelManipulator($kernel);
-        $this->addBundle($km, 'Propel\PropelBundle\PropelBundle');
-        $this->addBundle($km, 'AlphaLemon\FrontendBundle\AlphaLemonFrontendBundle');
-        $this->addBundle($km, 'AlphaLemon\PageTreeBundle\AlphaLemonPageTreeBundle');
-        $this->addBundle($km, 'AlphaLemon\ThemeEngineBundle\AlphaLemonThemeEngineBundle');
-        
+        $updateFile = false;
         $kernelFile = $this->rootDir . '/app/AppKernel.php';
         $contents = file_get_contents($kernelFile);
        
+        if(strpos($contents, 'new AlphaLemon\FrontendBundle\AlphaLemonFrontendBundle()') === false)
+        {
+            $cmsBundles = "\n            new Propel\PropelBundle\PropelBundle(),\n";
+            $cmsBundles .= "            new AlphaLemon\FrontendBundle\AlphaLemonFrontendBundle(),\n";
+            $cmsBundles .= "            new AlphaLemon\PageTreeBundle\AlphaLemonPageTreeBundle(),\n";
+            $cmsBundles .= "            new AlphaLemon\ThemeEngineBundle\AlphaLemonThemeEngineBundle(),\n";
+            $cmsBundles .= "        );";
+            $contents = preg_replace('/[\s]+\);/s', $cmsBundles, $contents);
+            $updateFile = true;
+        }
+        
         if(strpos($contents, '$themes = new \AlphaLemon\ThemeEngineBundle\Core\Autoloader\ThemesAutoloader()') === false)
         {
             $cmsBundles = "\$themes = new \AlphaLemon\ThemeEngineBundle\Core\Autoloader\ThemesAutoloader();\n";
@@ -115,8 +119,11 @@ class Installer {
             $cmsBundles .= "        if (in_array(\$this->getEnvironment(), array('dev', 'test', 'alcms_dev'";
 
             $contents = preg_replace('/if \(in_array\(\$this-\>getEnvironment\(\), array\(\'dev\', \'test\'/s', $cmsBundles, $contents);
-            file_put_contents($kernelFile, $contents);
+            $updateFile = true;
         }
+        
+        if($updateFile) file_put_contents($kernelFile, $contents);
+        require_once __DIR__ . '/../app/AppKernel.php';
     }
     
     private function addBundle(KernelManipulator $km, $bundleName)
@@ -231,12 +238,13 @@ class Installer {
     {
         $kernel = new \AppKernel('alcms_dev', true);
         $kernel->boot();
-        $cmd = sprintf('alphalemon:populate %s %s %s %s --driver=%s', $this->host, $this->database, $this->user, $this->password, $this->driver);
-        
+        $cmd = sprintf('alphalemon:populate %s %s --user=%s --password=%s --driver=%s', $this->host, $this->database, $this->user, $this->password, $this->driver);
+
+        $symlink = (in_array(strtolower(PHP_OS), array('unix', 'linux'))) ? ' --symlink' : ''; 
         \AlphaLemon\PageTreeBundle\Core\Tools\AlToolkit::executeCommand($kernel, array('propel:build',
                                                                      'propel:insert-sql --force',
                                                                      $cmd,
-                                                                     'assets:install ' . $this->rootDir . '/web --symlink',
+                                                                     'assets:install ' . $this->rootDir . '/web' . $symlink,
                                                                      'assetic:dump',
                                                                      'cache:clear',
             ));
