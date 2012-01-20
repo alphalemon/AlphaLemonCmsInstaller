@@ -103,7 +103,7 @@ class Installer {
        
         if(strpos($contents, '$themes = new \AlphaLemon\ThemeEngineBundle\Core\Autoloader\ThemesAutoloader()') === false)
         {
-            $cmsBundles = "\$themes = new \ThemeEngineCore\Autoloader\ThemesAutoloader();\n";
+            $cmsBundles = "\$themes = new \AlphaLemon\ThemeEngineBundle\Core\Autoloader\ThemesAutoloader();\n";
             $cmsBundles .= "        \$bundles = array_merge(\$bundles, \$themes->getBundles());\n";            
             $cmsBundles .= "        if (in_array(\$this->getEnvironment(), array('alcms', 'alcms_dev', 'test'))) {\n";
             $cmsBundles .= "            \$bundles[] = new AlphaLemon\AlValumUploaderBundle\AlValumUploaderBundle();\n";
@@ -232,7 +232,7 @@ class Installer {
         $kernel = new \AppKernel('alcms_dev', true);
         $kernel->boot();
         $cmd = sprintf('alphalemon:populate %s %s %s %s --driver=%s', $this->host, $this->database, $this->user, $this->password, $this->driver);
-
+        
         \AlphaLemon\PageTreeBundle\Core\Tools\AlToolkit::executeCommand($kernel, array('propel:build',
                                                                      'propel:insert-sql --force',
                                                                      $cmd,
