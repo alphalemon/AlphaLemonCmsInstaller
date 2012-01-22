@@ -38,7 +38,8 @@ class Installer {
     private $password;
     private $driver;
     
-    public function __construct() {
+    public function __construct() 
+    {
         $this->rootDir = \AlphaLemon\PageTreeBundle\Core\Tools\AlToolkit::normalizePath(__DIR__ . '/..');
     }
 
@@ -67,6 +68,8 @@ class Installer {
     {
         $dir = realpath($this->rootDir);
         
+        $connection = $this->connectDb();
+
         $this->checkFolder($dir . '/vendor/propel');
         $this->checkFolder($dir . '/vendor/phing');
         $this->checkFolder($dir . '/vendor/bundles/Propel/PropelBundle');
@@ -217,12 +220,25 @@ class Installer {
             file_put_contents($configFile, $config . $contents);
         }
     }
+
+    private function connectDb()
+    {
+        try
+        {
+            return new \PropelPDO(sprintf("%s:host=%s", $this->driver, $this->host), $this->user, $this->password);
+        }
+        catch(Exception $ex)
+        {
+            echo "\nERROR: An error occoured when connectig to the database with the given parameters. Check the configuration parameters into the bin/config.php file\n\n";
+            die;
+        }
+    }
     
     private function createDb()
     {
         try
         {
-            $connection = new \PropelPDO(sprintf("mysql:host=%s", $this->host), $this->user, $this->password);
+            $connection = $this->connectDb();
 
             $query = 'CREATE DATABASE ' . $this->database;
             $statement = $connection->prepare($query);
@@ -248,5 +264,7 @@ class Installer {
                                                                      'assetic:dump',
                                                                      'cache:clear',
             ));
+
+        echo "\n\nInstallation completed!\n\n";
     }
 }
