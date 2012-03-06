@@ -282,6 +282,6 @@ class Installer {
         echo "Open your browser at http://localhost to browse your website\n";
         echo "Open your browser at http://localhost/alcms.php/backend/en/index to edit your website\n";
         echo "Open your browser at http://localhost/alcms_dev.php/backend/en/index to edit your website in debug mode\n";
-        echo "\n\nDon't forget to fix permissions before starting";
+        echo "\nDon't forget to fix permissions before starting\n\n";
     }
 }
